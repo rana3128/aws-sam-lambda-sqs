@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: sqs-lambda-test
+
+
+Resources:
+  LambdaFunction1:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: bank-statement-request
+      FunctionName: bank-statement-request
+      CodeUri: lambda/bankStatementRequest
+      Handler: app.handler
+      Runtime: nodejs14.x
+      MemorySize: 128
+      Timeout: 30
+      Layers:
+        - arn:aws:lambda:us-west-2:<account_id>:layer:aws-sdk-v2:1
+      Environment:
+        Variables:
+          AWS_REASION: us-west-2
+          BANK_STATEMENT_QUEUE: sqstest
+      Policies:
+        - SQSPollerPolicy:
+            QueueName:
+              !GetAtt testQueueResource.QueueName
+        - SQSSendMessagePolicy:
+            QueueName:
+              !GetAtt testQueueResource.QueueName
+
+  LambdaFunction2:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: bank-statement-queue-processor
+      FunctionName: bank-statement-queue-processor
+      CodeUri: lambda/bankStatementQueueHandler
+      Handler: app.handler
+      Runtime: nodejs14.x
+      MemorySize: 128
+      Timeout: 30
+      Layers:
+        - arn:aws:lambda:us-west-2:<account_id>:layer:aws-sdk-v2:1
+      Environment:
+        Variables:
+          AWS_REASION: us-west-2
+          BANK_STATEMENT_QUEUE: sqstest
+      Policies:
+        - SQSPollerPolicy:
+            QueueName:
+              !GetAtt testQueueResource.QueueName
+        - SQSSendMessagePolicy:
+            QueueName:
+              !GetAtt testQueueResource.QueueName
+
+  testQueueResource:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: sqstest
+      VisibilityTimeout: 301
+
+  testRequestEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1
+      MaximumBatchingWindowInSeconds: 300
+      Enabled: true
+      EventSourceArn: !GetAtt testQueueResource.Arn
+      FunctionName: !GetAtt LambdaFunction2.Arn

@@ -1,0 +1,15 @@
+{
+    "name": "beadrock-bank-statement",
+    "description": "replaced-by-user-input",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {
+        "aws-sdk": "^2.1126.0"
+    },
+    "devDependencies": {
+    },
+    "scripts": {
+        "test": "jest --roots __tests__/unit",
+        "integ-test": "jest --roots __tests__/integration"
+    }
+}
